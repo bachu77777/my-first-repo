@@ -3,6 +3,7 @@ data/
 output/
 outputs/*
 !outputs/README.md
+inputs/web_input.json
 
 # 임시 파일 및 캐시
 __pycache__/
