@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>대본 초안 자동화 웹 툴 (Offline)</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      h1 {
+        margin-top: 0;
+      }
+      .notice {
+        background: #1e293b;
+        border: 1px solid #334155;
+        padding: 12px 14px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+      }
+      .error {
+        background: #7f1d1d;
+        border-color: #991b1b;
+      }
+      .success {
+        background: #14532d;
+        border-color: #166534;
+      }
+      form {
+        display: grid;
+        gap: 14px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      label {
+        font-size: 14px;
+        color: #cbd5e1;
+      }
+      input,
+      textarea {
+        border: 1px solid #334155;
+        border-radius: 8px;
+        background: #020617;
+        color: #e2e8f0;
+        padding: 10px;
+        font-size: 14px;
+      }
+      textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+      .small textarea {
+        min-height: 96px;
+      }
+      .options {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .button {
+        border: 0;
+        background: #2563eb;
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 16px;
+        cursor: pointer;
+      }
+      .output-grid {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 12px;
+      }
+      pre {
+        white-space: pre-wrap;
+        line-height: 1.4;
+        margin: 0;
+      }
+      @media (max-width: 980px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>유튜브 대본 초안 자동화 툴 (Offline Web)</h1>
+      <p>비용 이슈로 OpenAI 호출은 비활성화되어 있습니다. 현재 페이지는 <strong>offline_mode=true</strong>로 고정 실행됩니다.</p>
+
+      {% if errors %}
+      <div class="notice error">
+        <strong>입력/실행 오류</strong>
+        <ul>
+          {% for item in errors %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if success_message %}
+      <div class="notice success">{{ success_message }}</div>
+      {% endif %}
+
+      <form method="post" action="/generate">
+        <div class="grid">
+          <div class="field">
+            <label for="title">영상 제목</label>
+            <input id="title" name="title" value="{{ form_data.title }}" />
+          </div>
+          <div class="field">
+            <label for="thumbnail_text">썸네일 문구</label>
+            <input id="thumbnail_text" name="thumbnail_text" value="{{ form_data.thumbnail_text }}" />
+          </div>
+          <div class="field">
+            <label for="viewer_persona">시청자 페르소나</label>
+            <input id="viewer_persona" name="viewer_persona" value="{{ form_data.viewer_persona }}" />
+          </div>
+          <div class="field">
+            <label for="creator_persona">제작자 페르소나</label>
+            <input id="creator_persona" name="creator_persona" value="{{ form_data.creator_persona }}" />
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="script_target">타겟 대본</label>
+            <textarea id="script_target" name="script_target">{{ form_data.script_target }}</textarea>
+          </div>
+          <div class="field">
+            <label for="script_ref1">참고 대본 1</label>
+            <textarea id="script_ref1" name="script_ref1">{{ form_data.script_ref1 }}</textarea>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="field">
+            <label for="script_ref2">참고 대본 2</label>
+            <textarea id="script_ref2" name="script_ref2">{{ form_data.script_ref2 }}</textarea>
+          </div>
+          <div class="field small">
+            <label for="style_rules">스타일 규칙 (줄바꿈으로 구분)</label>
+            <textarea id="style_rules" name="style_rules">{{ form_data.style_rules }}</textarea>
+          </div>
+        </div>
+
+        <div class="options">
+          <label for="section_count">섹션 개수</label>
+          <input id="section_count" name="section_count" value="{{ form_data.section_count }}" style="width:80px" />
+
+          <label for="min_section_chars">최소 길이</label>
+          <input id="min_section_chars" name="min_section_chars" value="{{ form_data.min_section_chars }}" style="width:90px" />
+
+          <label for="max_section_chars">최대 길이</label>
+          <input id="max_section_chars" name="max_section_chars" value="{{ form_data.max_section_chars }}" style="width:90px" />
+
+          <label>
+            <input type="checkbox" name="strict_fact_mode" {% if form_data.strict_fact_mode == "on" %}checked{% endif %} />
+            strict_fact_mode
+          </label>
+        </div>
+
+        <button class="button" type="submit">목차/초안 생성</button>
+      </form>
+
+      {% if outputs %}
+      <div class="output-grid">
+        <div class="card">
+          <h3>outline.md</h3>
+          <pre>{{ outputs.outline }}</pre>
+        </div>
+        <div class="card">
+          <h3>draft_sections.md</h3>
+          <pre>{{ outputs.draft }}</pre>
+        </div>
+        <div class="card">
+          <h3>report.json</h3>
+          <pre>{{ outputs.report | tojson(indent=2) }}</pre>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </body>
+</html>
