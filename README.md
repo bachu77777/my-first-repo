@@ -24,6 +24,8 @@ outputs/
   report.json
 src/
   main.py         # CLI 진입점
+  web_app.py      # 웹페이지 서버(offline 모드)
+  web_utils.py    # 웹 입력 -> payload 변환
 ```
 
 ---
@@ -54,13 +56,37 @@ src/
 
 ## 실행 방법
 
-### 1) 오프라인 테스트 실행
+### 0) 의존성 설치
 
 ```bash
-python src/main.py --input inputs/sample_input.json --output outputs
+python3 -m pip install -r requirements.txt
 ```
 
-### 2) OpenAI API 모드 실행
+### 1) 오프라인 CLI 실행
+
+```bash
+python3 src/main.py --input inputs/sample_input.json --output outputs
+```
+
+### 2) 오프라인 웹페이지 실행 (현재 권장)
+
+비용 이슈 대응을 위해 웹페이지는 `offline_mode=true`로 고정되어 있습니다.
+
+```bash
+python3 src/web_app.py
+```
+
+브라우저에서 `http://localhost:8000` 접속 후 입력 폼을 채워 생성하면:
+
+- `outputs/web/outline.md`
+- `outputs/web/draft_sections.md`
+- `outputs/web/report.json`
+
+파일이 생성되고, 화면에도 즉시 렌더링됩니다.
+
+### 3) OpenAI API 모드 실행 (추후 사용)
+
+웹페이지가 아니라 CLI 설정으로만 사용하세요.
 
 1. `inputs/sample_input.json`에서 `"offline_mode": false`로 변경
 2. 환경 변수 설정
@@ -72,7 +98,7 @@ export OPENAI_API_KEY="your_api_key"
 3. 실행
 
 ```bash
-python src/main.py --input inputs/sample_input.json --output outputs
+python3 src/main.py --input inputs/sample_input.json --output outputs
 ```
 
 ---
