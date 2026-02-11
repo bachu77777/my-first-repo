@@ -5,12 +5,21 @@ from typing import Any
 from pipeline.llm_client import OpenAIChatClient
 from pipeline.models import DraftSection, InputPayload, OutlineSection, PreprocessResult
 
+FORMAL_ENDINGS = ("니다", "습니다")
+
 
 def _source_excerpt(preprocessed: PreprocessResult, max_blocks: int = 10) -> list[dict[str, Any]]:
     blocks = preprocessed.target[:max_blocks] + preprocessed.ref1[:max_blocks] + preprocessed.ref2[:max_blocks]
     return [
         {"index": block.index, "tags": block.tags, "text": block.text[:300]} for block in blocks
     ]
+
+
+def _ensure_formal_sentence(text: str) -> str:
+    normalized = text.strip().rstrip(".!? ")
+    if normalized.endswith(FORMAL_ENDINGS):
+        return normalized + "."
+    return normalized + "입니다."
 
 
 def _offline_draft(
@@ -22,8 +31,9 @@ def _offline_draft(
     sections: list[DraftSection] = []
     for idx, item in enumerate(outline):
         source = source_texts[idx % max(1, len(source_texts))] if source_texts else ""
+        bridge_intro = item.bridge.strip().rstrip(".!? ")
         bridge_text = (
-            f"{item.bridge}. 앞선 장면의 질문을 잠시 붙잡고, "
+            f"{bridge_intro}. 앞선 장면의 질문을 잠시 붙잡고, "
             f"이제 {item.topic_title} 쪽으로 시선을 옮겨 봅니다."
         )
         topic_text = (
@@ -32,8 +42,8 @@ def _offline_draft(
             f"결국 핵심은 '{item.comment_trigger}'라는 질문으로 귀결됩니다."
         ).strip()
         if "니다 종결" in " ".join(payload.style_rules):
-            bridge_text = bridge_text.rstrip(".") + "입니다."
-            topic_text = topic_text.rstrip(".") + "입니다."
+            bridge_text = _ensure_formal_sentence(bridge_text)
+            topic_text = _ensure_formal_sentence(topic_text)
         sections.append(DraftSection(idx=item.idx, bridge_text=bridge_text, topic_text=topic_text))
     return sections
 

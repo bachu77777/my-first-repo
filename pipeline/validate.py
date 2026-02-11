@@ -10,6 +10,18 @@ from pipeline.models import DraftSection, InputPayload, ValidationIssue, Validat
 
 AWKWARD_ENDINGS = ("을.", "줄은.", "것을.", "수를.", "등을.")
 FORMAL_ENDINGS = ("니다", "습니다")
+KOREAN_ENTITY_SUFFIXES = ("특별시", "광역시", "시", "군", "구", "읍", "역", "국")
+KOREAN_ENTITY_STOPWORDS = {
+    "당시",
+    "다시",
+    "표시",
+    "출시",
+    "제시",
+    "잠시",
+    "혹시",
+    "도시",
+    "국민",
+}
 
 
 def _sentences(text: str) -> list[str]:
@@ -37,8 +49,11 @@ def _extract_english_proper(text: str) -> set[str]:
 
 
 def _extract_korean_geo_person(text: str) -> set[str]:
-    geo = set(re.findall(r"[가-힣]{2,}(?:시|군|구|도|읍|면|동|리|역|국)", text))
-    person = set(re.findall(r"[가-힣]{2,4}씨", text))
+    suffix_pattern = "|".join(KOREAN_ENTITY_SUFFIXES)
+    geo_pattern = rf"(?<![가-힣])([가-힣]{{2,8}}(?:{suffix_pattern}))(?![가-힣])"
+    geo = set(re.findall(geo_pattern, text))
+    geo = {token for token in geo if token not in KOREAN_ENTITY_STOPWORDS}
+    person = set(re.findall(r"(?<![가-힣])([가-힣]{2,4}씨)(?![가-힣])", text))
     return geo | person
 
 
