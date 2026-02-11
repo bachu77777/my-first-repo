@@ -22,6 +22,25 @@ def _ensure_formal_sentence(text: str) -> str:
     return normalized + "입니다."
 
 
+def _choose_object_particle(word: str) -> str:
+    token = word.strip()
+    if not token:
+        return "를"
+    last_char = token[-1]
+    code = ord(last_char)
+    if 0xAC00 <= code <= 0xD7A3:
+        has_batchim = (code - 0xAC00) % 28 != 0
+        return "을" if has_batchim else "를"
+    return "를"
+
+
+def _attach_object_particle(word: str) -> str:
+    normalized = word.strip().rstrip(".!? ")
+    if not normalized:
+        return ""
+    return normalized + _choose_object_particle(normalized)
+
+
 def _offline_draft(
     payload: InputPayload,
     outline: list[OutlineSection],
@@ -32,12 +51,14 @@ def _offline_draft(
     for idx, item in enumerate(outline):
         source = source_texts[idx % max(1, len(source_texts))] if source_texts else ""
         bridge_intro = item.bridge.strip().rstrip(".!? ")
+        topic_label = item.topic_title if "파트" in item.topic_title else f"{item.topic_title} 파트"
+        purpose_phrase = _attach_object_particle(item.purpose.lower())
         bridge_text = (
             f"{bridge_intro}. 앞선 장면의 질문을 잠시 붙잡고, "
             f"이제 {item.topic_title} 쪽으로 시선을 옮겨 봅니다."
         )
         topic_text = (
-            f"{item.topic_title} 파트에서는 {item.purpose.lower()}를 중심으로 전개합니다. "
+            f"{topic_label}에서는 {purpose_phrase} 중심으로 전개합니다. "
             f"{source[:220]} "
             f"결국 핵심은 '{item.comment_trigger}'라는 질문으로 귀결됩니다."
         ).strip()
